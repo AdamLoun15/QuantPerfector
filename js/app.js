@@ -77,24 +77,33 @@ export function init() {
 async function bootstrapCloud() {
     try {
         await initFirebase();
+    } catch (err) {
+        console.warn('[QP] initFirebase failed:', err.message);
+        return;
+    }
 
-        // Handle magic link completion if URL contains sign-in link
+    try {
         await completeSignInWithLink();
+    } catch (err) {
+        console.warn('[QP] completeSignInWithLink failed:', err.message);
+    }
 
-        // Sign in anonymously if no session
+    try {
         await signInAnonymously();
+    } catch (err) {
+        console.warn('[QP] signInAnonymously failed:', err.message);
+    }
 
-        // Init auth UI
-        initAuthUI();
+    initAuthUI();
 
-        // Background sync: pull from cloud, merge, rebuild
+    try {
         const merged = await syncOnLoad();
         if (merged) {
             buildProblemPool();
             updateHomeScreen();
         }
     } catch (err) {
-        console.warn('[QP] Cloud bootstrap failed (app works offline):', err.message);
+        console.warn('[QP] syncOnLoad failed:', err.message);
     }
 }
 

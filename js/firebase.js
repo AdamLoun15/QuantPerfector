@@ -41,33 +41,15 @@ export async function initFirebase() {
         firebaseFirestore = firestoreMod;
 
         app = firebaseApp.initializeApp(FIREBASE_CONFIG);
+        console.log('[QP] Firebase app created');
+
         auth = firebaseAuth.getAuth(app);
+        console.log('[QP] Auth instance ready');
 
-        // Initialize Firestore with persistence (v11+ uses this instead of enableIndexedDbPersistence)
-        try {
-            db = firebaseFirestore.initializeFirestore(app, {
-                localCache: firebaseFirestore.persistentLocalCache({
-                    tabManager: firebaseFirestore.persistentMultipleTabManager()
-                })
-            });
-        } catch (e) {
-            // Falls back to default if persistence fails
-            db = firebaseFirestore.getFirestore(app);
-        }
+        db = firebaseFirestore.getFirestore(app);
+        console.log('[QP] Firestore instance ready');
 
-        // Wait for initial auth state before continuing
-        await new Promise((resolve) => {
-            const unsubscribe = firebaseAuth.onAuthStateChanged(auth, (user) => {
-                _user = user;
-                window.dispatchEvent(new CustomEvent('qp:auth-change', {
-                    detail: { user: _user }
-                }));
-                unsubscribe();
-                resolve();
-            });
-        });
-
-        // Re-subscribe for ongoing changes
+        // Listen for auth state changes
         firebaseAuth.onAuthStateChanged(auth, (user) => {
             _user = user;
             window.dispatchEvent(new CustomEvent('qp:auth-change', {
@@ -77,7 +59,7 @@ export async function initFirebase() {
 
         _initialized = true;
         _offline = false;
-        console.log('[QP] Firebase initialized', _user ? `(user: ${_user.uid.slice(0, 8)})` : '(no session)');
+        console.log('[QP] Firebase initialized');
         return db;
     } catch (err) {
         console.warn('[QP] Firebase CDN failed — running in local-only mode', err.message);
