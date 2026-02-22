@@ -42,19 +42,32 @@ export async function initFirebase() {
 
         app = firebaseApp.initializeApp(FIREBASE_CONFIG);
         auth = firebaseAuth.getAuth(app);
-        db = firebaseFirestore.getFirestore(app);
 
-        // Enable offline persistence
+        // Initialize Firestore with persistence (v11+ uses this instead of enableIndexedDbPersistence)
         try {
-            await firebaseFirestore.enableIndexedDbPersistence(db);
+            db = firebaseFirestore.initializeFirestore(app, {
+                localCache: firebaseFirestore.persistentLocalCache({
+                    tabManager: firebaseFirestore.persistentMultipleTabManager()
+                })
+            });
         } catch (e) {
-            // Multi-tab persistence may fail — that's ok
-            if (e.code !== 'failed-precondition' && e.code !== 'unimplemented') {
-                console.warn('[QP] Firestore persistence error:', e.message);
-            }
+            // Falls back to default if persistence fails
+            db = firebaseFirestore.getFirestore(app);
         }
 
-        // Listen for auth state changes
+        // Wait for initial auth state before continuing
+        await new Promise((resolve) => {
+            const unsubscribe = firebaseAuth.onAuthStateChanged(auth, (user) => {
+                _user = user;
+                window.dispatchEvent(new CustomEvent('qp:auth-change', {
+                    detail: { user: _user }
+                }));
+                unsubscribe();
+                resolve();
+            });
+        });
+
+        // Re-subscribe for ongoing changes
         firebaseAuth.onAuthStateChanged(auth, (user) => {
             _user = user;
             window.dispatchEvent(new CustomEvent('qp:auth-change', {
@@ -64,7 +77,7 @@ export async function initFirebase() {
 
         _initialized = true;
         _offline = false;
-        console.log('[QP] Firebase initialized');
+        console.log('[QP] Firebase initialized', _user ? `(user: ${_user.uid.slice(0, 8)})` : '(no session)');
         return db;
     } catch (err) {
         console.warn('[QP] Firebase CDN failed — running in local-only mode', err.message);
@@ -129,7 +142,7 @@ export async function completeSignInWithLink() {
         // If currently anonymous, link the email credential instead
         if (_user && _user.isAnonymous) {
             const credential = firebaseAuth.EmailAuthProvider.credentialWithLink(email, window.location.href);
-            const result = await firebaseAuth.linkWithCredential(_user, credential);
+            const result = await firebaseAuth.linkWithCredential(auth.currentUser, credential);
             _user = result.user;
         } else {
             const result = await firebaseAuth.signInWithEmailLink(auth, email, window.location.href);
