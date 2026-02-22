@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0c0c14">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>QuantPerfector</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <!-- ═══ ACCOUNT BAR ═══ -->
+    <div class="account-bar">
+        <div class="sync-indicator">
+            <span class="sync-dot" id="sync-dot" title="Ready"></span>
+        </div>
+        <button class="account-btn" id="account-btn">
+            <span id="account-label">Guest</span>
+        </button>
+    </div>
+
+    <!-- ═══ AUTH MODAL ═══ -->
+    <div id="auth-modal" class="auth-modal hidden">
+        <div class="auth-modal-content">
+            <button class="auth-modal-close" id="auth-modal-close">&times;</button>
+            <h2>Save Your Progress</h2>
+
+            <div id="auth-guest-section">
+                <p class="auth-note">Sign in with your email to sync progress across devices. No password needed — we'll send you a magic link.</p>
+                <form id="auth-email-form">
+                    <input type="email" id="auth-email-input" class="auth-input" placeholder="you@example.com" required>
+                    <button type="submit" class="btn-primary auth-submit" id="auth-submit-btn">Send Magic Link</button>
+                </form>
+                <div id="auth-message" class="auth-message hidden"></div>
+            </div>
+
+            <div id="auth-signedin-section" class="hidden">
+                <p class="auth-note">Signed in as <strong id="auth-signedin-email"></strong></p>
+                <p class="auth-note">Your data syncs automatically across devices.</p>
+                <button class="btn-secondary" id="auth-signout-btn">Sign Out</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ HOME SCREEN ═══ -->
+    <section id="screen-home" class="screen">
+        <div class="home-header">
+            <h1 class="home-title">QuantPerfector</h1>
+            <p class="home-subtitle">Adaptive Mental Math Trainer</p>
+            <div class="home-level-badge">
+                <span id="home-level">Level 1</span>
+                <span class="xp-label" id="home-xp">0 XP</span>
+            </div>
+        </div>
+
+        <div class="mode-buttons">
+            <button class="mode-btn" id="btn-mode-sprint">
+                <span class="mode-btn-label">Sprint</span>
+                <span class="mode-btn-desc">2 min — quick burst</span>
+            </button>
+            <button class="mode-btn" id="btn-mode-flow">
+                <span class="mode-btn-label">Flow</span>
+                <span class="mode-btn-desc">15 min — build focus</span>
+            </button>
+            <button class="mode-btn" id="btn-mode-deep">
+                <span class="mode-btn-label">Deep</span>
+                <span class="mode-btn-desc">30 min — deep practice</span>
+            </button>
+        </div>
+
+        <div id="focus-rec" class="focus-rec hidden"></div>
+
+        <div class="home-actions">
+            <button class="btn-secondary btn-drill" id="btn-drill">Mistake Drill</button>
+            <button class="btn-secondary" id="btn-dashboard">Dashboard</button>
+            <button class="btn-secondary" id="btn-settings">Settings</button>
+        </div>
+    </section>
+
+    <!-- ═══ SESSION SCREEN ═══ -->
+    <section id="screen-session" class="screen hidden">
+        <div class="session-top-bar">
+            <span class="session-mode-badge" id="session-mode-badge">FLOW</span>
+            <div class="session-progress-bar">
+                <div class="session-progress-fill" id="session-progress-fill"></div>
+            </div>
+            <span class="session-timer-text" id="session-timer-text">15:00</span>
+            <button class="btn-pause" id="btn-session-pause" aria-label="Pause">&#9208;</button>
+        </div>
+
+        <div class="session-info-row">
+            <div class="session-streak">
+                <span id="streak-count">0</span>
+                <span class="streak-fire" id="streak-fire"></span>
+            </div>
+            <div class="session-xp-mini">
+                <span id="level-display">Lv.1</span>
+                <div class="xp-bar-mini">
+                    <div class="xp-bar-mini-fill" id="xp-bar-fill"></div>
+                </div>
+                <span id="xp-text">0 XP</span>
+            </div>
+        </div>
+
+        <div class="problem-area">
+            <div id="problem-text">
+                <span class="operand-a">7</span>
+                <span class="operator">&times;</span>
+                <span class="operand-b">8</span>
+                <span class="equals">=</span>
+                <span class="answer-display" id="answer-display">?</span>
+            </div>
+        </div>
+
+        <div class="countdown-bar-container">
+            <div class="countdown-bar-fill" id="countdown-bar-fill"></div>
+        </div>
+
+        <div id="xp-float-container"></div>
+
+        <div class="numpad">
+            <button class="numpad-key" data-key="7">7</button>
+            <button class="numpad-key" data-key="8">8</button>
+            <button class="numpad-key" data-key="9">9</button>
+            <button class="numpad-key" data-key="4">4</button>
+            <button class="numpad-key" data-key="5">5</button>
+            <button class="numpad-key" data-key="6">6</button>
+            <button class="numpad-key" data-key="1">1</button>
+            <button class="numpad-key" data-key="2">2</button>
+            <button class="numpad-key" data-key="3">3</button>
+            <button class="numpad-key numpad-negative" data-key="negative">&plusmn;</button>
+            <button class="numpad-key" data-key="0">0</button>
+            <button class="numpad-key numpad-delete" data-key="delete">&#9003;</button>
+            <button class="numpad-key numpad-submit" data-key="enter" style="grid-column: 1 / -1;">Submit</button>
+        </div>
+    </section>
+
+    <!-- ═══ FEEDBACK OVERLAY ═══ -->
+    <div id="feedback-overlay" class="feedback-overlay hidden">
+        <div class="feedback-icon"></div>
+        <div class="feedback-text"></div>
+        <div class="feedback-hint"></div>
+    </div>
+
+    <!-- ═══ COUNTDOWN OVERLAY (3-2-1) ═══ -->
+    <div id="countdown-overlay" class="countdown-overlay hidden">
+        <div class="countdown-number">3</div>
+    </div>
+
+    <!-- ═══ PAUSE OVERLAY ═══ -->
+    <div id="pause-overlay" class="pause-overlay hidden">
+        <h2>Paused</h2>
+        <p style="color: var(--text-muted);">Take a breath. Resume when ready.</p>
+        <button class="btn-primary" id="btn-resume">Resume</button>
+    </div>
+
+    <!-- ═══ LEVEL UP OVERLAY ═══ -->
+    <div id="levelup-overlay" class="levelup-overlay hidden">
+        <div class="levelup-text">Level Up!</div>
+        <div class="levelup-level">Level 2!</div>
+    </div>
+
+    <!-- ═══ REVIEW SCREEN ═══ -->
+    <section id="screen-review" class="screen hidden">
+        <div class="review-header">
+            <h2>Session Complete</h2>
+            <p>Great work! Here's how you did.</p>
+        </div>
+        <div id="review-content"></div>
+        <div class="review-buttons">
+            <button class="btn-primary" id="btn-review-again">Go Again</button>
+            <button class="btn-secondary" id="btn-review-done">Done</button>
+        </div>
+    </section>
+
+    <!-- ═══ DASHBOARD SCREEN ═══ -->
+    <section id="screen-dashboard" class="screen hidden">
+        <div class="dashboard-header">
+            <h2>Dashboard</h2>
+            <button class="btn-back" id="btn-dash-back">&larr; Back</button>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- All-time stats -->
+            <div class="dash-card">
+                <h3>All Time</h3>
+                <div class="all-time-stats" id="all-time-stats"></div>
+            </div>
+
+            <!-- Accuracy trend -->
+            <div class="dash-card">
+                <h3>Accuracy (30 days)</h3>
+                <canvas id="chart-accuracy"></canvas>
+            </div>
+
+            <!-- Speed trend -->
+            <div class="dash-card">
+                <h3>Speed (30 days)</h3>
+                <canvas id="chart-speed"></canvas>
+            </div>
+
+            <!-- Operation performance -->
+            <div class="dash-card" id="op-performance">
+                <h3>By Operation</h3>
+                <canvas id="chart-ops"></canvas>
+            </div>
+
+            <!-- Weakness heatmap -->
+            <div class="dash-card" style="grid-column: 1 / -1;">
+                <h3>Multiplication Mastery</h3>
+                <div class="heatmap-wrapper">
+                    <canvas id="chart-heatmap"></canvas>
+                </div>
+            </div>
+
+            <!-- Session history -->
+            <div class="dash-card">
+                <h3>Recent Sessions</h3>
+                <div class="session-list" id="session-history"></div>
+            </div>
+        </div>
+
+        <div id="heatmap-tooltip" class="heatmap-tooltip"></div>
+    </section>
+
+    <!-- ═══ DRILL SCREEN ═══ -->
+    <section id="screen-drill" class="screen hidden">
+        <div class="dashboard-header">
+            <h2>Mistake Drill</h2>
+            <button class="btn-back" id="btn-drill-back">&larr; Back</button>
+        </div>
+        <div id="drill-content"></div>
+    </section>
+
+    <!-- ═══ SETTINGS SCREEN ═══ -->
+    <section id="screen-settings" class="screen hidden">
+        <div class="settings-header">
+            <h2>Settings</h2>
+            <button class="btn-back" id="btn-settings-back">&larr; Save & Back</button>
+        </div>
+
+        <div class="settings-group">
+            <h3>General</h3>
+            <div class="setting-row">
+                <span class="setting-label">Per-problem timer</span>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <input type="range" id="setting-timer" min="3" max="30" value="10">
+                    <span class="setting-value" id="setting-timer-val">10s</span>
+                </div>
+            </div>
+            <div class="setting-row">
+                <span class="setting-label">Sound</span>
+                <input type="checkbox" id="setting-sound" checked>
+            </div>
+            <div class="setting-row">
+                <span class="setting-label">Theme</span>
+                <select id="setting-theme">
+                    <option value="dark">Dark</option>
+                    <option value="light">Light</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="settings-group">
+            <h3>Operations & Ranges</h3>
+            <div class="op-range-grid">
+                <div class="op-range-card">
+                    <input type="checkbox" id="setting-add-enabled" checked>
+                    <span class="op-symbol">+</span>
+                    <div class="range-inputs">
+                        <input type="number" id="setting-add-minA" value="10" min="1"> to
+                        <input type="number" id="setting-add-maxA" value="99" min="1">
+                        <span>+</span>
+                        <input type="number" id="setting-add-minB" value="10" min="1"> to
+                        <input type="number" id="setting-add-maxB" value="99" min="1">
+                    </div>
+                </div>
+                <div class="op-range-card">
+                    <input type="checkbox" id="setting-sub-enabled" checked>
+                    <span class="op-symbol">&minus;</span>
+                    <div class="range-inputs">
+                        <input type="number" id="setting-sub-minA" value="20" min="1"> to
+                        <input type="number" id="setting-sub-maxA" value="99" min="1">
+                        <span>&minus;</span>
+                        <input type="number" id="setting-sub-minB" value="10" min="1"> to
+                        <input type="number" id="setting-sub-maxB" value="99" min="1">
+                    </div>
+                </div>
+                <div class="op-range-card">
+                    <input type="checkbox" id="setting-mul-enabled" checked>
+                    <span class="op-symbol">&times;</span>
+                    <div class="range-inputs">
+                        <input type="number" id="setting-mul-minA" value="2" min="1"> to
+                        <input type="number" id="setting-mul-maxA" value="12" min="1">
+                        <span>&times;</span>
+                        <input type="number" id="setting-mul-minB" value="2" min="1"> to
+                        <input type="number" id="setting-mul-maxB" value="12" min="1">
+                    </div>
+                </div>
+                <div class="op-range-card">
+                    <input type="checkbox" id="setting-div-enabled" checked>
+                    <span class="op-symbol">&divide;</span>
+                    <div class="range-inputs">
+                        <input type="number" id="setting-div-minA" value="2" min="1"> to
+                        <input type="number" id="setting-div-maxA" value="12" min="1">
+                        <span>&divide;</span>
+                        <input type="number" id="setting-div-minB" value="2" min="1"> to
+                        <input type="number" id="setting-div-maxB" value="12" min="1">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-actions">
+            <button class="btn-secondary" id="btn-export">Export Data</button>
+            <button class="btn-secondary" id="btn-import">Import Data</button>
+            <button class="btn-danger" id="btn-reset">Reset All Data</button>
+        </div>
+    </section>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
